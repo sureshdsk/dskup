@@ -50,6 +50,36 @@ dskup --version            # Show installed version
 dskup --help               # Show help
 ```
 
+## Create a New Project
+
+```bash
+# Option 1: Create from template and edit
+dskup --edit my-project
+
+# Option 2: Copy a sample config and customize
+cp ~/.dskup/examples/django-celery.yaml ~/.config/dskup/configs/my-project.yaml
+dskup --edit my-project
+
+# Option 3: Create from scratch
+cat > ~/.config/dskup/configs/my-project.yaml << 'EOF'
+project: my-project
+root: ~/Projects/my-project
+
+tabs:
+  - name: dev
+    panes:
+      - commands:
+          - echo "hello from pane 1"
+      - split: vertical
+        split_from: 1
+        commands:
+          - echo "hello from pane 2"
+EOF
+
+# Launch it
+dskup my-project
+```
+
 ## Configuration
 
 Configs live in `~/.config/dskup/configs/`. Each project gets a `.yaml` file.
