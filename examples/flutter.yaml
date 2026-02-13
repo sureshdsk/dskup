@@ -1,0 +1,26 @@
+# Flutter App Development
+# Run the app with hot reload, tests, and device logs
+#
+# Layout (single tab, 3 panes):
+#   ┌─────────────────┬─────────────────┐
+#   │                 │  flutter test   │
+#   │  flutter run    ├─────────────────┤
+#   │                 │  device logs    │
+#   └─────────────────┴─────────────────┘
+
+project: flutter-app
+root: ~/Projects/my-flutter-app
+
+tabs:
+  - name: dev
+    panes:
+      - commands:
+          - flutter run
+      - split: vertical
+        split_from: 1
+        commands:
+          - flutter test --watch
+      - split: horizontal
+        split_from: 2
+        commands:
+          - flutter logs

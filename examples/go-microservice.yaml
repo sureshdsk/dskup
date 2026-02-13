@@ -1,0 +1,31 @@
+# Go Microservice
+# Run the service with air (hot reload), tests, and logs
+#
+# Layout (single tab, 2x2 grid):
+#   ┌─────────────────┬─────────────────┐
+#   │  air (reload)   │  go test        │
+#   ├─────────────────┼─────────────────┤
+#   │  docker compose │  git / shell    │
+#   └─────────────────┴─────────────────┘
+
+project: go-microservice
+root: ~/Projects/my-go-service
+
+tabs:
+  - name: dev
+    panes:
+      - commands:
+          - air
+      - split: vertical
+        split_from: 1
+        commands:
+          - go test ./... -v
+      - split: horizontal
+        split_from: 1
+        commands:
+          - docker compose up -d db redis
+          - docker compose logs -f
+      - split: horizontal
+        split_from: 2
+        commands:
+          - git status

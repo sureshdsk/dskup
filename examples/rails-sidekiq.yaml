@@ -1,0 +1,28 @@
+# Ruby on Rails + Sidekiq
+# Web server, background jobs, and Rails console
+#
+# Layout (2 tabs):
+#   Tab 1 "server": Rails server | Sidekiq worker
+#   Tab 2 "tools":  Rails console | git
+
+project: rails-sidekiq
+root: ~/Projects/my-rails-app
+
+tabs:
+  - name: server
+    panes:
+      - commands:
+          - bundle exec rails server
+      - split: vertical
+        split_from: 1
+        commands:
+          - bundle exec sidekiq
+
+  - name: tools
+    panes:
+      - commands:
+          - bundle exec rails console
+      - split: vertical
+        split_from: 1
+        commands:
+          - git status

@@ -1,0 +1,27 @@
+# Docker Compose Stack
+# Run services via docker compose with logs and shell access
+#
+# Layout (single tab, 3 panes):
+#   ┌─────────────────┬─────────────────┐
+#   │                 │  docker logs    │
+#   │  docker compose ├─────────────────┤
+#   │  up             │  shell          │
+#   └─────────────────┴─────────────────┘
+
+project: docker-stack
+root: ~/Projects/my-docker-app
+
+tabs:
+  - name: docker
+    panes:
+      - commands:
+          - docker compose up
+      - split: vertical
+        split_from: 1
+        commands:
+          - sleep 3
+          - docker compose logs -f web
+      - split: horizontal
+        split_from: 2
+        commands:
+          - docker compose exec web sh

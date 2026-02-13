@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+#
+# dskup — Dev Setup Kickstarter
+# Launch iTerm2 dev environments from YAML configs.
+#
+# Usage:
+#   dskup <project>        Load and launch a project config
+#   dskup --list           List available configs
+#   dskup --help           Show help
+#   dskup --edit <project> Open a project config in $EDITOR
+#   dskup --upgrade        Update dskup to the latest version
+#   dskup --version        Show version
+#
+
+set -euo pipefail
+
+# Resolve the directory where dskup is installed
+DSKUP_HOME="${DSKUP_HOME:-$HOME/.dskup}"
+CONFIG_DIR="${DSKUP_CONFIG_DIR:-$HOME/.config/dskup/configs}"
+LAUNCHER="$DSKUP_HOME/launcher.py"
+VENV_PYTHON="$DSKUP_HOME/.venv/bin/python3"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+DSKUP_VERSION="0.1.0"
+
+usage() {
+    echo -e "${CYAN}dskup${NC} — Dev Setup Kickstarter (v${DSKUP_VERSION})"
+    echo ""
+    echo "Usage:"
+    echo "  dskup <project>          Launch a project dev environment"
+    echo "  dskup --list             List available project configs"
+    echo "  dskup --edit <project>   Open a project config in \$EDITOR"
+    echo "  dskup --upgrade          Update dskup to the latest version"
+    echo "  dskup --version          Show version"
+    echo "  dskup --help             Show this help message"
+    echo ""
+    echo "Configs directory: $CONFIG_DIR"
+}
+
+upgrade_dskup() {
+    echo -e "${CYAN}dskup${NC} Checking for updates..."
+
+    if [ ! -d "$DSKUP_HOME/.git" ]; then
+        echo -e "${RED}Error:${NC} $DSKUP_HOME is not a git repo. Cannot auto-upgrade."
+        echo "  Re-install with: git clone https://github.com/sureshdsk/dskup.git ~/.dskup && ~/.dskup/install.sh"
+        exit 1
+    fi
+
+    # Fetch and check for changes
+    git -C "$DSKUP_HOME" fetch --quiet origin
+    LOCAL=$(git -C "$DSKUP_HOME" rev-parse HEAD)
+    REMOTE=$(git -C "$DSKUP_HOME" rev-parse origin/main 2>/dev/null || git -C "$DSKUP_HOME" rev-parse origin/master)
+
+    if [ "$LOCAL" = "$REMOTE" ]; then
+        echo -e "${GREEN}dskup${NC} Already up to date (v${DSKUP_VERSION})."
+        return
+    fi
+
+    echo -e "${CYAN}dskup${NC} Updating..."
+    git -C "$DSKUP_HOME" pull --quiet
+
+    # Re-install deps if requirements changed
+    if [ -f "$DSKUP_HOME/requirements.txt" ] && [ -f "$DSKUP_HOME/.venv/bin/pip3" ]; then
+        "$DSKUP_HOME/.venv/bin/pip3" install --quiet -r "$DSKUP_HOME/requirements.txt"
+    fi
+
+    echo -e "${GREEN}dskup${NC} Updated successfully! Run ${CYAN}dskup --version${NC} to confirm."
+}
+
+list_configs() {
+    echo -e "${CYAN}Available project configs:${NC}"
+    echo ""
+    if [ ! -d "$CONFIG_DIR" ] || [ -z "$(ls -A "$CONFIG_DIR"/*.yaml 2>/dev/null)" ]; then
+        echo -e "  ${YELLOW}No configs found.${NC}"
+        echo "  Create one at: $CONFIG_DIR/<project>.yaml"
+        echo "  See examples: $DSKUP_HOME/examples/"
+        return
+    fi
+    for f in "$CONFIG_DIR"/*.yaml; do
+        name=$(basename "$f" .yaml)
+        # Extract project name from YAML if available
+        project=$(grep -m1 '^project:' "$f" 2>/dev/null | sed 's/project: *//' || echo "")
+        if [ -n "$project" ]; then
+            echo -e "  ${GREEN}$name${NC}  ($project)"
+        else
+            echo -e "  ${GREEN}$name${NC}"
+        fi
+    done
+}
+
+edit_config() {
+    local project="$1"
+    local config_file="$CONFIG_DIR/${project}.yaml"
+
+    if [ ! -f "$config_file" ]; then
+        echo -e "${YELLOW}Config not found: $config_file${NC}"
+        echo -e "Creating from example template..."
+        mkdir -p "$CONFIG_DIR"
+        cp "$DSKUP_HOME/examples/django-celery.yaml" "$config_file"
+    fi
+
+    ${EDITOR:-vim} "$config_file"
+}
+
+launch_project() {
+    local project="$1"
+    local config_file="$CONFIG_DIR/${project}.yaml"
+
+    if [ ! -f "$config_file" ]; then
+        echo -e "${RED}Error:${NC} Config not found: $config_file"
+        echo ""
+        echo "Available configs:"
+        list_configs
+        exit 1
+    fi
+
+    if [ ! -f "$VENV_PYTHON" ]; then
+        echo -e "${RED}Error:${NC} Python venv not found at $VENV_PYTHON"
+        echo "Run the installer: $DSKUP_HOME/install.sh"
+        exit 1
+    fi
+
+    if [ ! -f "$LAUNCHER" ]; then
+        echo -e "${RED}Error:${NC} Launcher not found at $LAUNCHER"
+        exit 1
+    fi
+
+    echo -e "${CYAN}dskup${NC} Launching ${GREEN}$project${NC}..."
+    "$VENV_PYTHON" "$LAUNCHER" "$config_file"
+}
+
+# --- Main ---
+
+if [ $# -eq 0 ]; then
+    usage
+    exit 0
+fi
+
+case "$1" in
+    --help|-h)
+        usage
+        ;;
+    --list|-l)
+        list_configs
+        ;;
+    --upgrade|-u)
+        upgrade_dskup
+        ;;
+    --version|-v)
+        echo "dskup v${DSKUP_VERSION}"
+        ;;
+    --edit|-e)
+        if [ $# -lt 2 ]; then
+            echo -e "${RED}Error:${NC} --edit requires a project name."
+            exit 1
+        fi
+        edit_config "$2"
+        ;;
+    -*)
+        echo -e "${RED}Error:${NC} Unknown option: $1"
+        usage
+        exit 1
+        ;;
+    *)
+        launch_project "$1"
+        ;;
+esac

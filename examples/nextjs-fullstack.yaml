@@ -1,0 +1,30 @@
+# Next.js Full-Stack App
+# Frontend dev server + API routes + Prisma studio
+#
+# Layout (single tab, 2x2 grid):
+#   ┌─────────────────┬─────────────────┐
+#   │  Next.js dev    │  Prisma studio  │
+#   ├─────────────────┼─────────────────┤
+#   │  Tailwind watch │  git / shell    │
+#   └─────────────────┴─────────────────┘
+
+project: nextjs-fullstack
+root: ~/Projects/my-nextjs-app
+
+tabs:
+  - name: dev
+    panes:
+      - commands:
+          - npm run dev
+      - split: vertical
+        split_from: 1
+        commands:
+          - npx prisma studio
+      - split: horizontal
+        split_from: 1
+        commands:
+          - npx tailwindcss -i ./src/input.css -o ./src/output.css --watch
+      - split: horizontal
+        split_from: 2
+        commands:
+          - git status

@@ -1,0 +1,34 @@
+# Python FastAPI
+# API server with uvicorn, Celery worker, and interactive shell
+#
+# Layout (single tab, 2x2 grid):
+#   ┌─────────────────┬─────────────────┐
+#   │  uvicorn server │  celery worker  │
+#   ├─────────────────┼─────────────────┤
+#   │  pytest --watch │  ipython shell  │
+#   └─────────────────┴─────────────────┘
+
+project: fastapi-app
+root: ~/Projects/my-fastapi-app
+
+tabs:
+  - name: dev
+    panes:
+      - commands:
+          - source .venv/bin/activate
+          - uvicorn app.main:app --reload
+      - split: vertical
+        split_from: 1
+        commands:
+          - source .venv/bin/activate
+          - celery -A app.worker worker --loglevel=info
+      - split: horizontal
+        split_from: 1
+        commands:
+          - source .venv/bin/activate
+          - ptw -- --tb=short
+      - split: horizontal
+        split_from: 2
+        commands:
+          - source .venv/bin/activate
+          - ipython

@@ -1,0 +1,31 @@
+# Django + Celery + Redis
+# Backend API with background task worker and Redis
+#
+# Layout (2 tabs):
+#   Tab 1 "server": Django runserver | Celery worker
+#   Tab 2 "tools":  Django shell     | git
+
+project: django-celery
+root: ~/Projects/my-django-app
+
+tabs:
+  - name: server
+    panes:
+      - commands:
+          - source .venv/bin/activate
+          - python manage.py runserver
+      - split: vertical
+        split_from: 1
+        commands:
+          - source .venv/bin/activate
+          - celery -A myapp worker --loglevel=info
+
+  - name: tools
+    panes:
+      - commands:
+          - source .venv/bin/activate
+          - python manage.py shell
+      - split: vertical
+        split_from: 1
+        commands:
+          - git status

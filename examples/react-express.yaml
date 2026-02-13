@@ -1,0 +1,30 @@
+# React + Express (separate repos)
+# Frontend and backend in different directories
+#
+# Layout (2 tabs):
+#   Tab 1 "frontend": React dev server | tests --watch
+#   Tab 2 "backend":  Express server   | git
+
+project: react-express
+root: ~/Projects
+
+tabs:
+  - name: frontend
+    dir: ~/Projects/frontend
+    panes:
+      - commands:
+          - npm start
+      - split: vertical
+        split_from: 1
+        commands:
+          - npm test -- --watch
+
+  - name: backend
+    dir: ~/Projects/backend
+    panes:
+      - commands:
+          - npm run dev
+      - split: vertical
+        split_from: 1
+        commands:
+          - git log --oneline -20
